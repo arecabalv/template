@@ -1,0 +1,71 @@
+services:
+  Shared.KafkaConfig:
+    factory:
+      class: ../../../context/shared/infrastructure/event-bus/kafka/KafkaConfigFactory
+      method: "createConfig"
+
+  Shared.KafkaConnect:
+    class: ../../../context/shared/infrastructure/event-bus/kafka/KafkaConnection
+    arguments: ["@Shared.KafkaConfig"]
+
+  Shared.KafkaQueueFormatter:
+    class: ../../../context/shared/infrastructure/event-bus/kafka/KafkaQueueFormatter
+    arguments: ["template"]
+
+  Shared.domain.KafkaEventBus:
+    factory:
+      class: ../../../context/shared/infrastructure/event-bus/kafka/KafkaEventBusFactory
+      method: "create"
+    arguments:
+      [
+        "@Shared.KafkaConnect",
+        "@Shared.DomainEventFailoverPublisher",
+        "@Shared.KafkaQueueFormatter",
+      ]
+
+  Shared.domain.EventBus:
+    class: ../../../context/shared/infrastructure/event-bus/inMemory/InMemoryEventBus
+    arguments: []
+
+  Shared.Logger:
+    class: ../../../context/shared/infrastructure/impl/WinstonLogger
+    arguments: []
+
+  Template.MongoConfig:
+    factory:
+      class: ../../../context/shared/infrastructure/persistance/mongo/MongoConfigFactory
+      method: "createConfig"
+    arguments: ["template"]
+
+  Template.ConnectionManager:
+    factory:
+      class: ../../../context/shared/infrastructure/persistance/mongo/MongoClientFactory
+      method: "createClient"
+    arguments: ["template", "@Template.MongoConfig"]
+
+  Template.RedisConfig:
+    factory:
+      class: ../../../context/shared/infrastructure/persistance/redis/RedisConfigFactory
+      method: "createConfig"
+    arguments: ["template"]
+
+  Template.RedisConnectionManager:
+    factory:
+      class: ../../../context/shared/infrastructure/persistance/redis/RedisClientFactory
+      method: "createClient"
+    arguments: ["template", "@Template.RedisConfig"]
+
+  Template.RedisRepository:
+    class: ../../../context/shared/infrastructure/persistance/redis/RedisRepository
+    arguments: ['@Template.RedisConnectionManager', "template"]
+
+  Shared.AxiosClientFactory:
+    class: ../../../context/shared/infrastructure/client/AxiosClientFactory
+
+  Shared.Client:
+    class: ../../../context/shared/infrastructure/client/Client
+    arguments: ["@Shared.AxiosClientFactory"]
+
+  Shared.DomainEventFailoverPublisher:
+    class: ../../../context/shared/infrastructure/event-bus/DomainEventFailoverPublisher
+    arguments: ["@Template.ConnectionManager"]

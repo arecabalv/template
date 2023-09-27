@@ -1,0 +1,13 @@
+services:
+
+  Repository:
+    class: ../../../context/cache/infrastructure/repository/ApiCacheRepository
+    arguments: []
+
+  UseCase.Get.UserCache:
+    class: ../../../context/cache/application/CacheGetter
+    arguments: ['@Repository', '@Template.RedisRepository']
+
+  Controller.Get.UserCache:
+    class: ../../controllers/cache/GetCacheController
+    arguments: ['@UseCase.Get.UserCache']
